@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-white text-textPrimary font-sans antialiased;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
