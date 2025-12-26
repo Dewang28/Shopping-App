@@ -1,10 +1,12 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import Header from "./components/layout/Header";
+import { Toaster } from "react-hot-toast";
 
-export const metadata: Metadata = {
-  title: "Shop",
-  description: "Modern shopping experience",
-};
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 export default function RootLayout({
   children,
@@ -13,7 +15,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={inter.className}>
+        <Header />
+        {children}
+        <Toaster position="top-center" />
+      </body>
     </html>
   );
 }

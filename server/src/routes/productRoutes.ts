@@ -1,18 +1,19 @@
-import { Router } from "express"
-import { createProduct, getProducts } from "../comtrollers/productController"
-import { upload } from "../utils/upload"
-import { auth, admin } from "../middleware/auth.middleware"
+import { Router } from "express";
+import { createProduct, getProducts , getProductById } from "../comtrollers/productController";
+import { upload } from "../utils/upload";
+import { auth, admin } from "../middleware/auth.middleware";
 
-const router = Router()
+const router = Router();
 
 router.post(
   "/",
+  upload.array("images"), 
   auth,
   admin,
-  upload.single("image"),
   createProduct
-)
+);
 
-router.get("/", getProducts)
+router.get("/", getProducts);
+router.get("/:id", getProductById);
 
-export default router
+export default router;
