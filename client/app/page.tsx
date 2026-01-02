@@ -6,26 +6,35 @@ import { Product } from "./types/product";
 
 export default async function HomePage() {
   const products: Product[] = await getProducts();
- console.log("PRODUCTS:", products);
+  console.log("PRODUCTS:", products);
   const featured = products.slice(0, 6);
 
   return (
-    <main>
-      <section className="bg-muted py-6">
+    <main className="min-h-screen bg-white">
+      {/* Banner Section */}
+      <section className="py-8 sm:py-10 border-b border-gray-100">
         <Container>
-          <div className="h-[500px] bg-white rounded flex items-center justify-center text-textSecondary text-xl font-medium">
+          <div className="h-[500px] w-full bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex items-center justify-center relative">
             <BannerSlider />
           </div>
         </Container>
       </section>
 
-      <section className="py-12">
+      {/* Featured Products Section */}
+      <section className="py-16 sm:py-24 bg-gray-50/50">
         <Container>
-          <h2 className="text-xl font-semibold tracking-wide mb-6">
-            RISING STARS
-          </h2>
+          <div className="flex flex-col items-center justify-center mb-12 text-center">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-3">
+              RISING STARS
+            </h2>
+            <div className="w-16 h-1 bg-black rounded-full mb-4 opacity-80"></div>
+            <p className="text-gray-500 max-w-2xl text-lg">
+              Our most coveted pieces of the season, curated just for you.
+            </p>
+          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+          {/* Product Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             {featured.map((p) => (
               <ProductCard
                 key={p._id}

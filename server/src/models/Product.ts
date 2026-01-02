@@ -6,7 +6,9 @@ export interface IProduct extends Document {
   price: number;
   mrp?: number;
   discount?: number;
-  description?: string;
+  description: string;
+  category: string[];
+  gender?: string;
   images: string[];
 }
 
@@ -17,7 +19,16 @@ const productSchema = new Schema<IProduct>(
     price: { type: Number, required: true },
     mrp: { type: Number },
     discount: { type: Number },
-    description: { type: String },
+    description: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: [String],
+      enum: ["men", "women", "kids", "home", "beauty", "genz", "studio"],
+      required: true,
+    },
+    gender: { type: String },
     images: {
       type: [String],
       required: true,

@@ -22,10 +22,34 @@ export const createProduct = async (req: Request, res: Response) => {
       mrp,
       discount,
       description,
+      category,
+      gender,
     } = req.body;
 
     if (!title || !brand || !price) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    let parsedCategory: string[] = [];
+
+    if (category) {
+      if (Array.isArray(category)) {
+        parsedCategory = category;
+      } else if (typeof category === "string") {
+        try {
+          parsedCategory = JSON.parse(category);
+        } catch {
+          return res
+            .status(400)
+            .json({ message: "Invalid categories format" });
+        }
+      }
+    }
+
+    if (!Array.isArray(parsedCategory) || parsedCategory.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "At least one category is required" });
     }
 
     const product = await Product.create({
@@ -36,6 +60,8 @@ export const createProduct = async (req: Request, res: Response) => {
       discount: discount ? Number(discount) : undefined,
       description,
       images: imageUrls,
+      category: parsedCategory,
+      gender: Boolean(gender) ? gender : undefined,
     });
 
     res.status(201).json(product);
@@ -48,29 +74,32 @@ export const createProduct = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getProducts = async (req: Request, res: Response) => {
-  const products = await Product.find().lean();
+  try {
+    const { category } = req.query;
+    const filter: any = {};
 
-  const normalized = products.map((p: any) => ({
-    ...p,
-    images:
-      Array.isArray(p.images) && p.images.length
-        ? p.images
-        : p.image
-        ? [p.image]
-        : [],
-  }));
+    if (category) {
+      filter.category = { $regex: new RegExp(`^${category}$`, "i") };
+    }
 
-  res.json(normalized);
+    const products = await Product.find(filter);
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching products", error });
+  }
 };
 
 export const getProductById = async (req: Request, res: Response) => {
-  const product = await Product.findById(req.params.id);
+  try {
+    const product = await Product.findById(req.params.id);
 
-  if (!product) {
-    return res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.json(product);
+  } catch (err: any) {
+    res.status(500).json({ message: "Error fetching product", error: err.message });
   }
-
-  res.json(product);
 };
