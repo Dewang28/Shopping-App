@@ -12,7 +12,7 @@ const app = express()
 
 app.use(
   cors({
-    origin: "https://shopping-app-d3ma.onrender.com",
+    origin: "https://shopping-2x0ajz5tr-dewangs-projects-73593ae8.vercel.app",
     credentials: true,
   })
 );
