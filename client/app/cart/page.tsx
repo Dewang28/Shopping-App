@@ -9,7 +9,7 @@ export default function CartPage() {
   const { items, removeItem } = useCartStore();
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shipping = subtotal > 1000 ? 0 : 99; // Example logic: Free shipping over ₹1000
+  const shipping = subtotal > 1000 ? 0 : 99; 
   const total = subtotal + shipping;
 
   if (items.length === 0) {

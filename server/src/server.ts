@@ -12,7 +12,7 @@ const app = express()
 
 app.use(
   cors({
-    origin: "https://shopping-2x0ajz5tr-dewangs-projects-73593ae8.vercel.app",
+    origin: "https://shopping-app-beta-five.vercel.app/",
     credentials: true,
   })
 );
