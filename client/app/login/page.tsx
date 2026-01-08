@@ -35,7 +35,9 @@ export default function LoginPage() {
       const data = await login(form);
 
       if (data.token) {
-        localStorage.setItem("token", data.token);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("token", data.token);
+        }
       }
 
       setUser(data.user);
