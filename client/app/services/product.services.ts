@@ -1,10 +1,13 @@
 import { Product } from "../types/product";
+import axios from "axios";
 
 export interface ProductFilters {
   category?: string;
   gender?: string;
   brand?: string;
 }
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const getProducts = async (
   filters?: ProductFilters
@@ -17,10 +20,9 @@ export const getProducts = async (
     });
   }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/products?${params.toString()}`,
-    { cache: "no-store" }
-  );
+  const res = await fetch(`${API_URL}/api/products?${params.toString()}`, {
+    cache: "no-store",
+  });
 
   if (!res.ok) {
     throw new Error("Failed to fetch products");
@@ -30,14 +32,20 @@ export const getProducts = async (
 };
 
 export const getProductById = async (id: string): Promise<Product> => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/products/${id}`,
-    { cache: "no-store" }
-  );
+  const res = await fetch(`${API_URL}/api/products/${id}`, {
+    cache: "no-store",
+  });
 
   if (!res.ok) {
     throw new Error("Failed to fetch product");
   }
 
   return res.json();
+};
+
+export const createProduct = async (productData: Partial<Product> | FormData) => {
+  const response = await axios.post(`${API_URL}/api/products`, productData, {
+    withCredentials: true,
+  });
+  return response.data;
 };
