@@ -125,7 +125,7 @@ export default function CreateProductPage() {
       await api.post("/api/products", data);
 
       toast.success("Product created successfully!");
-      router.push("/admin/products");
+      router.push("/");
       router.refresh();
     } catch (error: unknown) {
       console.error("Create Product Error:", error);
