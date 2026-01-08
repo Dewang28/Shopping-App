@@ -23,8 +23,8 @@ export default function LoginPage() {
   };
 
   const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); 
-    
+    e.preventDefault();
+
     if (!form.email || !form.password) {
       toast.error("Please fill in all fields");
       return;
@@ -32,8 +32,13 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      const user = await login(form);
-      setUser(user);
+      const data = await login(form);
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
+      setUser(data.user);
       toast.success("Welcome back!");
       router.push("/");
     } catch (error) {
@@ -44,17 +49,14 @@ export default function LoginPage() {
     }
   };
 
-  // Shared Input Styles
   const inputWrapperClass = "relative";
-  const inputClass = 
+  const inputClass =
     "w-full h-11 pl-11 pr-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all outline-none placeholder:text-gray-400 text-sm";
   const iconClass = "absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400";
 
   return (
     <main className="min-h-screen bg-gray-50/50 flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-md p-8 rounded-2xl shadow-sm border border-gray-100">
-        
-        {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="text-3xl font-extrabold tracking-tighter text-gray-900 mb-2 block">
             SHOP.
@@ -65,9 +67,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Login Form */}
         <form onSubmit={submit} className="space-y-5">
-          
           <div className="space-y-4">
             <div className={inputWrapperClass}>
               <Mail className={iconClass} />
@@ -97,9 +97,9 @@ export default function LoginPage() {
           </div>
 
           <div className="flex justify-end">
-             <button type="button" className="text-xs font-medium text-gray-500 hover:text-black transition-colors">
-               Forgot Password?
-             </button>
+            <button type="button" className="text-xs font-medium text-gray-500 hover:text-black transition-colors">
+              Forgot Password?
+            </button>
           </div>
 
           <button
@@ -118,17 +118,15 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-500">
           Don&apos;t have an account?{" "}
-          <Link 
-            href="/register" 
+          <Link
+            href="/register"
             className="font-bold text-black hover:underline underline-offset-4"
           >
             Create Account
           </Link>
         </div>
-
       </div>
     </main>
   );
