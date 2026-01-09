@@ -70,6 +70,7 @@ export default function Header() {
 
         {/* User Actions */}
         <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+          
           {/* Admin Link */}
           {user?.role === "admin" && (
             <Link
@@ -100,7 +101,7 @@ export default function Header() {
             </button>
           )}
 
-          {/* Wishlist */}
+          {/* Wishlist Link (Added Here) */}
           <Link
             href="/wishlist"
             className="flex flex-col items-center gap-1 group text-gray-700 hover:text-black transition-colors"
