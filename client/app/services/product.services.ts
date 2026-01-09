@@ -1,22 +1,22 @@
 import { Product } from "../types/product";
 import axios from "axios";
 
-export interface ProductFilters {
-  category?: string;
-  gender?: string;
-  brand?: string;
-}
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const getProducts = async (
-  filters?: ProductFilters
+  searchParams?: Record<string, string | string[] | undefined>
 ): Promise<Product[]> => {
   const params = new URLSearchParams();
 
-  if (filters) {
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) params.append(key, value);
+  if (searchParams) {
+    Object.entries(searchParams).forEach(([key, value]) => {
+      if (value) {
+        if (Array.isArray(value)) {
+          value.forEach((v) => params.append(key, v));
+        } else {
+          params.append(key, value as string);
+        }
+      }
     });
   }
 

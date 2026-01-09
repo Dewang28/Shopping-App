@@ -7,24 +7,21 @@ import { Product } from "../types/product";
 import Link from "next/link";
 import { SearchX } from "lucide-react";
 
-
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function ShopPage({ searchParams }: PageProps) {
-  
   const resolvedParams = await searchParams;
 
   const products: Product[] = await getProducts(resolvedParams);
 
   return (
     <main className="min-h-screen bg-white pb-12">
-      {/* Header Section */}
       <div className="bg-gray-50 border-b border-gray-100 py-10 mb-8">
         <Container>
           <div className="max-w-xl">
-             <nav className="flex items-center text-sm text-gray-500 mb-4 animate-fade-in">
+            <nav className="flex items-center text-sm text-gray-500 mb-4 animate-fade-in">
               <Link href="/" className="hover:text-black transition-colors duration-200">
                 Home
               </Link>
@@ -44,16 +41,13 @@ export default async function ShopPage({ searchParams }: PageProps) {
       <Container>
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           
-          {/* Sidebar */}
           <aside className="hidden lg:block w-64 shrink-0">
             <div className="sticky top-24">
               <FilterSidebar />
             </div>
           </aside>
 
-          {/* Main Content */}
           <section className="flex-1">
-            
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <span className="text-sm font-medium text-gray-500">
                 Showing {products.length} results
@@ -61,7 +55,6 @@ export default async function ShopPage({ searchParams }: PageProps) {
               <SortBar />
             </div>
 
-            {/* Product */}
             {products.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
                 {products.map((p) => (
@@ -83,7 +76,6 @@ export default async function ShopPage({ searchParams }: PageProps) {
                 ))}
               </div>
             ) : (
-              
               <div className="flex flex-col items-center justify-center py-24 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-center animate-in fade-in zoom-in duration-300">
                 <div className="bg-white p-4 rounded-full shadow-sm mb-4">
                   <SearchX className="h-8 w-8 text-gray-400" />

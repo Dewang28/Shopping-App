@@ -76,14 +76,38 @@ export const createProduct = async (req: Request, res: Response) => {
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const { category } = req.query;
-    const filter: any = {};
+    const { category, brand, gender, sort, search } = req.query;
+
+    let query: any = {};
 
     if (category) {
-      filter.category = { $regex: new RegExp(`^${category}$`, "i") };
+      query.category = { $in: Array.isArray(category) ? category : [category] };
     }
 
-    const products = await Product.find(filter);
+    if (brand) {
+      query.brand = { $in: Array.isArray(brand) ? brand : [brand] };
+    }
+
+    if (gender) {
+      query.gender = { $in: Array.isArray(gender) ? gender : [gender] };
+    }
+
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+
+    let sortStage: any = {};
+    if (sort === "price_asc") {
+      sortStage.price = 1;
+    } else if (sort === "price_desc") {
+      sortStage.price = -1;
+    } else if (sort === "newest") {
+      sortStage.createdAt = -1;
+    } else {
+      sortStage.createdAt = -1;
+    }
+
+    const products = await Product.find(query).sort(sortStage);
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: "Error fetching products", error });
