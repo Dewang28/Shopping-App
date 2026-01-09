@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-// We use relative path to be safe. Adjust if your alias is different.
 import { toggleWishlist, getWishlist } from "../../services/wishlist.services";
 
 interface Props {
@@ -16,7 +15,7 @@ interface Props {
   id?: string;
 }
 
-// FIX 1: Define a type so we don't use 'any'
+
 type WishlistItem = string | { _id: string };
 
 export default function ProductCard({
@@ -37,13 +36,11 @@ export default function ProductCard({
     const checkStatus = async () => {
       try {
         const data = await getWishlist();
-        // FIX 1: Use the specific type instead of 'any'
         const exists = data?.products?.some((p: WishlistItem) => 
           (typeof p === 'string' ? p : p._id) === id
         );
         setIsWishlisted(!!exists);
       } catch {
-        // FIX 2: Removed 'error' variable since it was unused
       }
     };
     checkStatus();
@@ -60,7 +57,6 @@ export default function ProductCard({
       setIsWishlisted((prev) => !prev);
       await toggleWishlist(id);
     } catch {
-      // FIX 3: Removed 'error' variable here too
       setIsWishlisted((prev) => !prev);
     } finally {
       setLoading(false);
