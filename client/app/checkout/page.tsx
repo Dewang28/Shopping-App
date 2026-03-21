@@ -47,6 +47,15 @@ export default function CheckoutPage() {
     return () => clearTimeout(timer);
   }, [user, router]);
 
+  useEffect(() => {
+    if (user?.name) {
+      setAddress((prev) => ({
+        ...prev,
+        name: prev.name || user.name,
+      }));
+    }
+  }, [user]);
+
   if (!user) return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,6 +90,7 @@ export default function CheckoutPage() {
       clear();
       toast.success("Order placed successfully!");
       router.push("/"); 
+      router.refresh();
     } catch (error) {
       console.error(error);
       toast.error("Failed to place order. Please try again.");
@@ -270,7 +280,7 @@ export default function CheckoutPage() {
               {/* Action Button */}
               <button
                 onClick={placeOrder}
-                disabled={loading}
+                disabled={loading || items.length === 0}
                 className="w-full mt-6 h-12 bg-black text-white font-bold rounded-xl hover:bg-gray-900 transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/10 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {loading ? (
