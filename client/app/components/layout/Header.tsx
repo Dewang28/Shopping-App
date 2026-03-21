@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useAuthStore } from "../../store/auth.store";
 import { logout } from "../../services/auth.service";
-import { Search, User, Heart, ShoppingBag, LayoutDashboard } from "lucide-react";
+import { Search, User, Heart, ShoppingBag, LayoutDashboard, Package } from "lucide-react";
 import { useCartStore } from "../../store/cart.store";
 
 const categories = [
@@ -111,6 +111,16 @@ export default function Header() {
             <Heart className="h-5 w-5 transition-transform group-hover:scale-110" />
             <span className="text-[11px] font-bold uppercase tracking-wide hidden sm:block">Wishlist</span>
           </Link>
+
+          {user && (
+            <Link
+              href="/orders"
+              className="flex flex-col items-center gap-1 group text-gray-700 hover:text-black transition-colors"
+            >
+              <Package className="h-5 w-5 transition-transform group-hover:scale-110" />
+              <span className="text-[11px] font-bold uppercase tracking-wide hidden sm:block">Orders</span>
+            </Link>
+          )}
 
           {/* Cart / Bag */}
           <Link
