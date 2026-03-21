@@ -62,6 +62,26 @@ export const login = async (req: Request, res: Response) => {
 
   res.json({
     user: {
+      _id: user._id,
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  });
+};
+
+export const me = async (req: Request, res: Response) => {
+  const authReq = req as Request & { user?: { id: string } };
+  const user = await User.findById(authReq.user?.id);
+
+  if (!user) {
+    return res.status(404).json({ message: "USER_NOT_FOUND" });
+  }
+
+  res.json({
+    user: {
+      _id: user._id,
       id: user._id,
       name: user.name,
       email: user.email,

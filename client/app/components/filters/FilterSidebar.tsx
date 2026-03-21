@@ -14,13 +14,6 @@ const FILTERS = {
     { label: "Dresses", value: "dresses" },
     { label: "Activewear", value: "activewear" },
   ],
-  brands: [
-    { label: "Nike", value: "nike" },
-    { label: "Adidas", value: "adidas" },
-    { label: "Puma", value: "puma" },
-    { label: "Zara", value: "zara" },
-    { label: "H&M", value: "h&m" },
-  ],
   gender: [
     { label: "Men", value: "men" },
     { label: "Women", value: "women" },
@@ -129,31 +122,6 @@ export default function FilterSidebar() {
                   type="checkbox"
                   checked={selectedFilters.category.includes(item.value)}
                   onChange={() => handleFilterChange("category", item.value)}
-                  className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer"
-                />
-                <span className="text-sm text-gray-600 group-hover:text-black transition-colors select-none">
-                  {item.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Brand Section */}
-        <div>
-          <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
-            Brands
-          </h4>
-          <div className="space-y-3 max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 pr-2">
-            {FILTERS.brands.map((item) => (
-              <label
-                key={item.value}
-                className="flex items-center gap-3 cursor-pointer group"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedFilters.brand.includes(item.value)}
-                  onChange={() => handleFilterChange("brand", item.value)}
                   className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer"
                 />
                 <span className="text-sm text-gray-600 group-hover:text-black transition-colors select-none">

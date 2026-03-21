@@ -6,7 +6,7 @@ import { useCartStore } from "../store/cart.store";
 import { Trash2, ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
 
 export default function CartPage() {
-  const { items, removeItem } = useCartStore();
+  const { items, removeItem, setQuantity } = useCartStore();
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const shipping = subtotal > 1000 ? 0 : 99; 
@@ -82,7 +82,21 @@ export default function CartPage() {
                   <div className="flex justify-between items-end mt-4">
                     <div className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200">
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Qty</span>
-                      <span className="font-bold text-gray-900">{item.quantity}</span>
+                      <button
+                        onClick={() => setQuantity(item._id, item.quantity - 1)}
+                        className="text-lg font-bold text-gray-500 hover:text-black transition-colors"
+                        aria-label="Decrease quantity"
+                      >
+                        -
+                      </button>
+                      <span className="font-bold text-gray-900 min-w-4 text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => setQuantity(item._id, item.quantity + 1)}
+                        className="text-lg font-bold text-gray-500 hover:text-black transition-colors"
+                        aria-label="Increase quantity"
+                      >
+                        +
+                      </button>
                     </div>
                     
                     <div className="text-right">

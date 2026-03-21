@@ -11,6 +11,6 @@ export const createOrder = async (payload: {
     pincode: string;
   };
 }) => {
-  const res = await api.post("/orders", payload);
+  const res = await api.post("/api/orders", payload);
   return res.data;
 };

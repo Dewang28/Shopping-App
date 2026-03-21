@@ -2,6 +2,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import Header from "./components/layout/Header";
 import { Toaster } from "react-hot-toast";
+import AuthCartBootstrap from "./components/AuthCartBootstrap";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <AuthCartBootstrap />
         <Header />
         {children}
         <Toaster position="top-center" />

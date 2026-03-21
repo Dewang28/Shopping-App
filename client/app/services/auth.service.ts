@@ -20,7 +20,7 @@ export const register = async (data: {
 
 export const getMe = async () => {
   const res = await api.get("/api/auth/me");
-  return res.data;
+  return res.data.user;
 };
 
 export const logout = async () => {

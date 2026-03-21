@@ -64,12 +64,34 @@ const createProduct = async (req, res) => {
 exports.createProduct = createProduct;
 const getProducts = async (req, res) => {
     try {
-        const { category } = req.query;
-        const filter = {};
+        const { category, brand, gender, sort, search } = req.query;
+        let query = {};
         if (category) {
-            filter.category = { $regex: new RegExp(`^${category}$`, "i") };
+            query.category = { $in: Array.isArray(category) ? category : [category] };
         }
-        const products = await Product_1.default.find(filter);
+        if (brand) {
+            query.brand = { $in: Array.isArray(brand) ? brand : [brand] };
+        }
+        if (gender) {
+            query.gender = { $in: Array.isArray(gender) ? gender : [gender] };
+        }
+        if (search) {
+            query.title = { $regex: search, $options: "i" };
+        }
+        let sortStage = {};
+        if (sort === "price_asc") {
+            sortStage.price = 1;
+        }
+        else if (sort === "price_desc") {
+            sortStage.price = -1;
+        }
+        else if (sort === "newest") {
+            sortStage.createdAt = -1;
+        }
+        else {
+            sortStage.createdAt = -1;
+        }
+        const products = await Product_1.default.find(query).sort(sortStage);
         res.status(200).json(products);
     }
     catch (error) {

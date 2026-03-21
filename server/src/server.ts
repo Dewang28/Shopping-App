@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes";
 import orderRoutes from "./routes/order.routes";
 import cookieParser from "cookie-parser";
 import wishlistRoutes from "./routes/wishlist.routes";
+import cartRoutes from "./routes/cart.routes";
 connectDB();
 
 const app = express();
@@ -27,6 +28,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/cart", cartRoutes);
 
 const PORT = process.env.PORT || 5000;
 

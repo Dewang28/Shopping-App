@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { login } from "../services/auth.service";
 import { useAuthStore } from "../store/auth.store";
+import { useCartStore } from "../store/cart.store";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -11,6 +12,7 @@ import { Mail, Lock, Loader2, ArrowRight } from "lucide-react";
 export default function LoginPage() {
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
+  const syncWithBackend = useCartStore((s) => s.syncWithBackend);
 
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -34,6 +36,7 @@ export default function LoginPage() {
       setLoading(true);
       const user = await login(form);
       setUser(user);
+      await syncWithBackend();
       toast.success("Welcome back!");
       router.push("/");
       router.refresh(); // This ensures Server Components see the new cookie
