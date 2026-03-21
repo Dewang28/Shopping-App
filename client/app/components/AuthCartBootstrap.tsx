@@ -7,8 +7,8 @@ import { useCartStore } from "../store/cart.store";
 
 export default function AuthCartBootstrap() {
   const setUser = useAuthStore((state) => state.setUser);
-  const hydrateCart = useCartStore((state) => state.hydrateCart);
   const syncWithBackend = useCartStore((state) => state.syncWithBackend);
+  const resetForGuest = useCartStore((state) => state.resetForGuest);
 
   useEffect(() => {
     let mounted = true;
@@ -21,14 +21,14 @@ export default function AuthCartBootstrap() {
         }
 
         setUser(user);
-        await syncWithBackend();
+        await syncWithBackend(user._id);
       } catch (error) {
         if (!mounted) {
           return;
         }
 
         setUser(null);
-        await hydrateCart();
+        resetForGuest();
       }
     };
 
@@ -37,7 +37,7 @@ export default function AuthCartBootstrap() {
     return () => {
       mounted = false;
     };
-  }, [hydrateCart, setUser, syncWithBackend]);
+  }, [resetForGuest, setUser, syncWithBackend]);
 
   return null;
 }

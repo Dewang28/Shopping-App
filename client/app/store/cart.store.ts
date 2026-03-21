@@ -16,12 +16,13 @@ export interface CartItem extends Product {
 interface CartState {
   items: CartItem[];
   initialized: boolean;
+  ownerId: string | "guest";
   addItem: (product: Product) => void;
   removeItem: (id: string) => void;
   setQuantity: (id: string, quantity: number) => void;
   clear: () => void;
-  hydrateCart: () => Promise<void>;
-  syncWithBackend: () => Promise<void>;
+  syncWithBackend: (userId: string) => Promise<void>;
+  resetForGuest: () => void;
   setInitialized: (value: boolean) => void;
 }
 
@@ -39,13 +40,18 @@ const fromServer = (
     }));
 
 const syncIfLoggedIn = async (items: CartItem[]) => {
-  if (!useAuthStore.getState().user) {
+  const user = useAuthStore.getState().user;
+
+  if (!user) {
     return;
   }
 
   try {
     const cart = await syncCart(toPayload(items));
-    useCartStore.setState({ items: fromServer(cart) });
+    useCartStore.setState({
+      items: fromServer(cart),
+      ownerId: user._id,
+    });
   } catch (error) {
     console.error("CART_SYNC_ERROR:", error);
   }
@@ -56,6 +62,7 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       initialized: false,
+      ownerId: "guest",
       setInitialized: (value) => set({ initialized: value }),
       addItem: (product) => {
         let nextItems: CartItem[] = [];
@@ -93,46 +100,53 @@ export const useCartStore = create<CartState>()(
         void syncIfLoggedIn(nextItems);
       },
       clear: () => {
-        set({ items: [] });
+        set({
+          items: [],
+          ownerId: useAuthStore.getState().user?._id || "guest",
+        });
         if (useAuthStore.getState().user) {
           void clearRemoteCart().catch((error) => {
             console.error("CART_CLEAR_ERROR:", error);
           });
         }
       },
-      hydrateCart: async () => {
-        if (!useAuthStore.getState().user) {
-          set({ initialized: true });
-          return;
-        }
-
-        try {
-          const cart = await getCart();
-          set({ items: fromServer(cart), initialized: true });
-        } catch (error) {
-          console.error("CART_HYDRATE_ERROR:", error);
-          set({ initialized: true });
-        }
+      resetForGuest: () => {
+        set({
+          items: [],
+          ownerId: "guest",
+          initialized: true,
+        });
       },
-      syncWithBackend: async () => {
-        const localItems = get().items;
+      syncWithBackend: async (userId: string) => {
+        const { items: localItems, ownerId } = get();
+        const shouldMergeGuestCart = ownerId === "guest" && localItems.length > 0;
 
         try {
           const cart = await getCart();
           const serverItems = fromServer(cart);
-          const merged = [...serverItems];
+          let nextItems = serverItems;
 
-          for (const localItem of localItems) {
-            const existing = merged.find((item) => item._id === localItem._id);
-            if (existing) {
-              existing.quantity += localItem.quantity;
-            } else {
-              merged.push(localItem);
+          if (shouldMergeGuestCart) {
+            const merged = [...serverItems];
+
+            for (const localItem of localItems) {
+              const existing = merged.find((item) => item._id === localItem._id);
+              if (existing) {
+                existing.quantity += localItem.quantity;
+              } else {
+                merged.push(localItem);
+              }
             }
+
+            const syncedCart = await syncCart(toPayload(merged));
+            nextItems = fromServer(syncedCart);
           }
 
-          const syncedCart = await syncCart(toPayload(merged));
-          set({ items: fromServer(syncedCart), initialized: true });
+          set({
+            items: nextItems,
+            ownerId: userId,
+            initialized: true,
+          });
         } catch (error) {
           console.error("CART_MERGE_ERROR:", error);
           set({ initialized: true });
@@ -141,7 +155,10 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: "cart-store",
-      partialize: (state) => ({ items: state.items }),
+      partialize: (state) => ({
+        items: state.items,
+        ownerId: state.ownerId,
+      }),
     }
   )
 );

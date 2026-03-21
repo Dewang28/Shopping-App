@@ -36,7 +36,7 @@ export default function LoginPage() {
       setLoading(true);
       const user = await login(form);
       setUser(user);
-      await syncWithBackend();
+      await syncWithBackend(user._id);
       toast.success("Welcome back!");
       router.push("/");
       router.refresh(); // This ensures Server Components see the new cookie

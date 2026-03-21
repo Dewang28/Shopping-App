@@ -19,10 +19,12 @@ export default function Header() {
   const items = useCartStore((s) => s.items);
   const count = items.reduce((sum, i) => sum + i.quantity, 0);
   const user = useAuthStore((s) => s.user);
+  const resetForGuest = useCartStore((s) => s.resetForGuest);
 
   const handleLogout = async () => {
     await logout();
     useAuthStore.getState().setUser(null);
+    resetForGuest();
   };
 
   return (
