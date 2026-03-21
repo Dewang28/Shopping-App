@@ -8,7 +8,8 @@ import { Package, ChevronLeft, Truck, ShieldCheck } from "lucide-react";
 import { useAuthStore } from "../store/auth.store";
 import { getMyOrders, Order } from "../services/order.services";
 
-const formatCurrency = (value: number) => `₹${value.toLocaleString("en-IN")}`;
+const formatCurrency = (value?: number) =>
+  `₹${Number(value ?? 0).toLocaleString("en-IN")}`;
 
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString("en-IN", {
@@ -16,6 +17,25 @@ const formatDate = (value: string) =>
     month: "short",
     year: "numeric",
   });
+
+const getOrderSubtotal = (order: Order) =>
+  order.subtotal ??
+  order.items.reduce(
+    (sum, item) => sum + (item.lineTotal ?? (item.price ?? 0) * item.quantity),
+    0
+  );
+
+const getOrderShipping = (order: Order) => {
+  if (typeof order.shipping === "number") {
+    return order.shipping;
+  }
+
+  const subtotal = getOrderSubtotal(order);
+  return subtotal > 1000 ? 0 : 99;
+};
+
+const getOrderTotal = (order: Order) =>
+  order.total ?? getOrderSubtotal(order) + getOrderShipping(order);
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -129,10 +149,10 @@ export default function OrdersPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold uppercase tracking-wide">
-                      {order.status}
+                      {order.status || "pending"}
                     </span>
                     <span className="text-lg font-bold text-gray-900">
-                      {formatCurrency(order.total)}
+                      {formatCurrency(getOrderTotal(order))}
                     </span>
                   </div>
                 </div>
@@ -148,21 +168,21 @@ export default function OrdersPage() {
                           <div className="relative h-20 w-20 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 shrink-0">
                             <Image
                               src={item.image || "/placeholder.png"}
-                              alt={item.title}
+                              alt={item.title || "Ordered product"}
                               fill
                               className="object-contain p-2 mix-blend-multiply"
                             />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-gray-900 line-clamp-2">
-                              {item.title}
+                              {item.title || "Product"}
                             </p>
                             <p className="text-sm text-gray-500 mt-1">
                               Qty: {item.quantity} x {formatCurrency(item.price)}
                             </p>
                           </div>
                           <p className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                            {formatCurrency(item.lineTotal)}
+                            {formatCurrency(item.lineTotal ?? (item.price ?? 0) * item.quantity)}
                           </p>
                         </div>
                       ))}
@@ -175,12 +195,18 @@ export default function OrdersPage() {
                         Delivery
                       </h2>
                       <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm text-gray-600">
-                        <p className="font-semibold text-gray-900">{order.address.name}</p>
-                        <p className="mt-1">{order.address.phone}</p>
-                        <p className="mt-2">{order.address.line1}</p>
-                        <p>
-                          {order.address.city}, {order.address.state} {order.address.pincode}
-                        </p>
+                        {order.address ? (
+                          <>
+                            <p className="font-semibold text-gray-900">{order.address.name}</p>
+                            <p className="mt-1">{order.address.phone}</p>
+                            <p className="mt-2">{order.address.line1}</p>
+                            <p>
+                              {order.address.city}, {order.address.state} {order.address.pincode}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-gray-500">Address not available for this older order.</p>
+                        )}
                       </div>
                     </div>
 
@@ -191,19 +217,19 @@ export default function OrdersPage() {
                       <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3 text-sm">
                         <div className="flex justify-between text-gray-600">
                           <span>Subtotal</span>
-                          <span>{formatCurrency(order.subtotal)}</span>
+                          <span>{formatCurrency(getOrderSubtotal(order))}</span>
                         </div>
                         <div className="flex justify-between text-gray-600">
                           <span>Shipping</span>
-                          <span>{order.shipping === 0 ? "Free" : formatCurrency(order.shipping)}</span>
+                          <span>{getOrderShipping(order) === 0 ? "Free" : formatCurrency(getOrderShipping(order))}</span>
                         </div>
                         <div className="flex justify-between text-gray-600">
                           <span>Payment</span>
-                          <span className="uppercase">{order.paymentMethod}</span>
+                          <span className="uppercase">{order.paymentMethod || "cod"}</span>
                         </div>
                         <div className="border-t border-gray-200 pt-3 flex justify-between font-bold text-gray-900">
                           <span>Total</span>
-                          <span>{formatCurrency(order.total)}</span>
+                          <span>{formatCurrency(getOrderTotal(order))}</span>
                         </div>
                       </div>
                     </div>

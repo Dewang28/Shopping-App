@@ -2,17 +2,17 @@ import api from "./api";
 
 export type OrderItem = {
   product: string;
-  title: string;
+  title?: string;
   image?: string;
   quantity: number;
-  price: number;
-  lineTotal: number;
+  price?: number;
+  lineTotal?: number;
 };
 
 export type Order = {
   _id: string;
   items: OrderItem[];
-  address: {
+  address?: {
     name: string;
     phone: string;
     line1: string;
@@ -20,11 +20,11 @@ export type Order = {
     state: string;
     pincode: string;
   };
-  subtotal: number;
-  shipping: number;
-  total: number;
-  paymentMethod: string;
-  status: string;
+  subtotal?: number;
+  shipping?: number;
+  total?: number;
+  paymentMethod?: string;
+  status?: string;
   createdAt: string;
 };
 
