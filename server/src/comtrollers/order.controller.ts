@@ -3,6 +3,16 @@ import Order from "../models/Order"
 import Product from "../models/Product"
 import Cart from "../models/Cart"
 
+type LegacyOrderItem = {
+  product?: string
+  productId?: string
+  title?: string
+  image?: string
+  quantity?: number
+  price?: number
+  lineTotal?: number
+}
+
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const { items, address } = req.body
@@ -91,8 +101,60 @@ export const createOrder = async (req: Request, res: Response) => {
 export const getMyOrders = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id
-    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 })
-    res.json(orders)
+    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 }).lean()
+
+    const productIds = Array.from(
+      new Set(
+        orders.flatMap((order: any) =>
+          (order.items || [])
+            .map((item: LegacyOrderItem) => item.product || item.productId)
+            .filter(Boolean)
+        )
+      )
+    ) as string[]
+
+    const products = await Product.find(
+      { _id: { $in: productIds } },
+      { title: 1, price: 1, images: 1 }
+    ).lean()
+
+    const productMap = new Map(products.map((product) => [String(product._id), product]))
+
+    const enrichedOrders = orders.map((order: any) => {
+      const items = (order.items || []).map((item: LegacyOrderItem) => {
+        const productId = item.product || item.productId || ""
+        const product = productMap.get(String(productId))
+        const price = item.price ?? product?.price ?? 0
+        const quantity = item.quantity ?? 1
+
+        return {
+          product: productId,
+          title: item.title || product?.title || "Product",
+          image: item.image || product?.images?.[0],
+          quantity,
+          price,
+          lineTotal: item.lineTotal ?? price * quantity,
+        }
+      })
+
+      const subtotal = order.subtotal ?? items.reduce(
+        (sum: number, item: { lineTotal: number }) => sum + item.lineTotal,
+        0
+      )
+      const shipping = order.shipping ?? (subtotal > 1000 ? 0 : 99)
+
+      return {
+        ...order,
+        items,
+        subtotal,
+        shipping,
+        total: order.total ?? subtotal + shipping,
+        paymentMethod: order.paymentMethod || "cod",
+        status: order.status || "pending",
+      }
+    })
+
+    res.json(enrichedOrders)
   } catch (error: any) {
     console.error("GET_ORDERS_ERROR:", error)
     res.status(500).json({

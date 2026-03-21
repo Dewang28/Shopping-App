@@ -80,8 +80,40 @@ exports.createOrder = createOrder;
 const getMyOrders = async (req, res) => {
     try {
         const userId = req.user.id;
-        const orders = await Order_1.default.find({ user: userId }).sort({ createdAt: -1 });
-        res.json(orders);
+        const orders = await Order_1.default.find({ user: userId }).sort({ createdAt: -1 }).lean();
+        const productIds = Array.from(new Set(orders.flatMap((order) => (order.items || [])
+            .map((item) => item.product || item.productId)
+            .filter(Boolean))));
+        const products = await Product_1.default.find({ _id: { $in: productIds } }, { title: 1, price: 1, images: 1 }).lean();
+        const productMap = new Map(products.map((product) => [String(product._id), product]));
+        const enrichedOrders = orders.map((order) => {
+            const items = (order.items || []).map((item) => {
+                const productId = item.product || item.productId || "";
+                const product = productMap.get(String(productId));
+                const price = item.price ?? product?.price ?? 0;
+                const quantity = item.quantity ?? 1;
+                return {
+                    product: productId,
+                    title: item.title || product?.title || "Product",
+                    image: item.image || product?.images?.[0],
+                    quantity,
+                    price,
+                    lineTotal: item.lineTotal ?? price * quantity,
+                };
+            });
+            const subtotal = order.subtotal ?? items.reduce((sum, item) => sum + item.lineTotal, 0);
+            const shipping = order.shipping ?? (subtotal > 1000 ? 0 : 99);
+            return {
+                ...order,
+                items,
+                subtotal,
+                shipping,
+                total: order.total ?? subtotal + shipping,
+                paymentMethod: order.paymentMethod || "cod",
+                status: order.status || "pending",
+            };
+        });
+        res.json(enrichedOrders);
     }
     catch (error) {
         console.error("GET_ORDERS_ERROR:", error);
