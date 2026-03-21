@@ -14,11 +14,24 @@ const wishlist_routes_1 = __importDefault(require("./routes/wishlist.routes"));
 const cart_routes_1 = __importDefault(require("./routes/cart.routes"));
 (0, db_1.connectDB)();
 const app = (0, express_1.default)();
+const allowedOrigins = [
+    "http://localhost:3000",
+    "https://shopping-app-beta-five.vercel.app",
+    process.env.CLIENT_URL,
+].filter(Boolean);
 app.use((0, cors_1.default)({
-    origin: [
-        "https://shopping-app-beta-five.vercel.app",
-        "http://localhost:3000",
-    ],
+    origin: (origin, callback) => {
+        if (!origin) {
+            return callback(null, true);
+        }
+        const isExplicitlyAllowed = allowedOrigins.includes(origin);
+        const isPreviewDomain = /^https:\/\/.*\.vercel\.app$/.test(origin) ||
+            /^https:\/\/.*\.onrender\.com$/.test(origin);
+        if (isExplicitlyAllowed || isPreviewDomain) {
+            return callback(null, true);
+        }
+        return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
 }));
 app.use(express_1.default.json());

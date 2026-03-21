@@ -2,7 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export const auth = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.cookies?.token;
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null;
+  const token = bearerToken || req.cookies?.token;
+
   if (!token) return res.status(401).end();
 
   const decoded = jwt.verify(

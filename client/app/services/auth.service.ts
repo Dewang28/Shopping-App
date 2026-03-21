@@ -5,6 +5,9 @@ export const login = async (data: {
   password: string;
 }) => {
   const res = await api.post("/api/auth/login", data);
+  if (typeof window !== "undefined" && res.data.token) {
+    localStorage.setItem("token", res.data.token);
+  }
   return res.data.user; 
 };
 
@@ -25,5 +28,8 @@ export const getMe = async () => {
 
 export const logout = async () => {
   const res = await api.post("/api/auth/logout");
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("token");
+  }
   return res.data;
 };

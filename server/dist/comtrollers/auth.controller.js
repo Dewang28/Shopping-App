@@ -52,6 +52,7 @@ const login = async (req, res) => {
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.json({
+        token,
         user: {
             _id: user._id,
             id: user._id,
