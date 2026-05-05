@@ -258,13 +258,30 @@ const getAdminAnalytics = async (_req, res) => {
                 },
             },
         ]);
-        const lowStockProducts = await Product_1.default.find({
-            isActive: { $ne: false },
-            $expr: { $lt: ["$stock", "$lowStockThreshold"] },
-        })
-            .sort({ stock: 1 })
-            .limit(6)
-            .lean();
+        const lowStockProducts = await Product_1.default.aggregate([
+            {
+                $addFields: {
+                    normalizedStock: { $ifNull: ["$stock", 0] },
+                    normalizedLowStockThreshold: { $ifNull: ["$lowStockThreshold", 5] },
+                },
+            },
+            {
+                $match: {
+                    isActive: { $ne: false },
+                    $expr: { $lt: ["$normalizedStock", "$normalizedLowStockThreshold"] },
+                },
+            },
+            { $sort: { normalizedStock: 1 } },
+            { $limit: 6 },
+            {
+                $project: {
+                    title: 1,
+                    brand: 1,
+                    stock: "$normalizedStock",
+                    lowStockThreshold: "$normalizedLowStockThreshold",
+                },
+            },
+        ]);
         const topProducts = await Order_1.default.aggregate([
             { $unwind: "$items" },
             {

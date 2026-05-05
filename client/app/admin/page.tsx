@@ -260,7 +260,7 @@ export default function AdminPage() {
                           <p className="text-xs text-slate-500">{product.brand}</p>
                         </div>
                         <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-amber-700">
-                          {formatNumber(product.stock)} left
+                          {formatNumber(product.stock)} left / alert {formatNumber(product.lowStockThreshold)}
                         </span>
                       </div>
                     ))

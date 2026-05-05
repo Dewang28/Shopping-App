@@ -125,7 +125,7 @@ export default function AdminProductsPage() {
             <div className="p-8 text-center text-sm text-gray-500">No products found.</div>
           ) : (
             filteredProducts.map((product) => {
-              const isLowStock = (product.stock ?? 0) <= (product.lowStockThreshold ?? 5);
+              const isLowStock = (product.stock ?? 0) < (product.lowStockThreshold ?? 5);
               return (
                 <div
                   key={product._id}

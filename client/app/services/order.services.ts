@@ -255,10 +255,47 @@ const getSettledArray = <T,>(result: PromiseSettledResult<{ data: unknown }>) =>
   return [];
 };
 
+const applyInventoryAnalytics = (
+  analytics: AdminAnalytics,
+  products: Product[]
+): AdminAnalytics => {
+  const activeProducts = products.filter((product) => product.isActive !== false);
+  const lowStockProducts = activeProducts
+    .filter((product) => Number(product.stock ?? 0) < Number(product.lowStockThreshold ?? 5))
+    .sort((a, b) => Number(a.stock ?? 0) - Number(b.stock ?? 0))
+    .slice(0, 6)
+    .map((product) => ({
+      _id: product._id,
+      title: product.title,
+      brand: product.brand,
+      stock: Number(product.stock ?? 0),
+      lowStockThreshold: Number(product.lowStockThreshold ?? 5),
+    }));
+
+  return {
+    ...analytics,
+    productCount: activeProducts.length,
+    inactiveProducts: products.filter((product) => product.isActive === false).length,
+    totalStock: products.reduce((sum, product) => sum + Number(product.stock ?? 0), 0),
+    outOfStockProducts: products.filter((product) => Number(product.stock ?? 0) <= 0).length,
+    lowStockProducts,
+  };
+};
+
+const getInventoryProducts = async () => {
+  const res = await api.get("/api/products?includeInactive=true");
+  return Array.isArray(res.data) ? (res.data as Product[]) : [];
+};
+
 export const getAdminAnalytics = async () => {
   try {
     const res = await api.get("/api/orders/admin/analytics");
-    return res.data as AdminAnalytics;
+    try {
+      return applyInventoryAnalytics(res.data as AdminAnalytics, await getInventoryProducts());
+    } catch (inventoryError) {
+      console.error("ADMIN_INVENTORY_ANALYTICS_ERROR:", inventoryError);
+      return res.data as AdminAnalytics;
+    }
   } catch (error: unknown) {
     if (getResponseStatus(error) !== 404) {
       throw error;
@@ -266,7 +303,12 @@ export const getAdminAnalytics = async () => {
 
     try {
       const res = await api.get("/api/admin/orders/analytics");
-      return res.data as AdminAnalytics;
+      try {
+        return applyInventoryAnalytics(res.data as AdminAnalytics, await getInventoryProducts());
+      } catch (inventoryError) {
+        console.error("ADMIN_INVENTORY_ANALYTICS_ERROR:", inventoryError);
+        return res.data as AdminAnalytics;
+      }
     } catch (aliasError: unknown) {
       if (getResponseStatus(aliasError) !== 404) {
         throw aliasError;
@@ -281,7 +323,7 @@ export const getAdminAnalytics = async () => {
 
         return api.get("/api/admin/orders");
       }),
-      api.get("/api/products"),
+      api.get("/api/products?includeInactive=true"),
     ]);
 
     return buildAdminAnalyticsFromResources(
