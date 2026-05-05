@@ -26,7 +26,9 @@ const orderSchema = new mongoose_1.Schema({
     total: { type: Number, required: true },
     paymentMethod: { type: String, default: "cod" },
     paymentStatus: { type: String, default: "pending" },
-    status: { type: String, enum: ["placed", "delivered"], default: "placed" },
+    status: { type: String, enum: ["placed", "delivered", "returned"], default: "placed" },
+    returnedStockRestored: { type: Boolean, default: false },
+    returnedStockRestoredAt: { type: Date },
     tracking: {
         courier: { type: String },
         trackingNumber: { type: String },
@@ -34,7 +36,7 @@ const orderSchema = new mongoose_1.Schema({
     },
     statusHistory: [
         {
-            status: { type: String, enum: ["placed", "delivered"], required: true },
+            status: { type: String, enum: ["placed", "delivered", "returned"], required: true },
             note: { type: String },
             updatedAt: { type: Date, default: Date.now },
         },

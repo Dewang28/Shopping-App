@@ -4,10 +4,10 @@ import Order from "../models/Order"
 import Product from "../models/Product"
 import Cart from "../models/Cart"
 
-const ORDER_STATUSES = ["placed", "delivered"] as const
+const ORDER_STATUSES = ["placed", "delivered", "returned"] as const
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"] as const
 const normalizeOrderStatus = (status?: string) =>
-  status === "delivered" ? "delivered" : "placed"
+  status === "delivered" || status === "returned" ? status : "placed"
 
 type LegacyOrderItem = {
   product?: string
@@ -18,6 +18,26 @@ type LegacyOrderItem = {
   price?: number
   lineTotal?: number
 }
+
+const getStockUpdates = (
+  items: { product?: string; quantity?: number }[],
+  direction: "reserve" | "restore"
+) =>
+  items
+    .filter((item) => item.product && Types.ObjectId.isValid(item.product) && Number(item.quantity) > 0)
+    .map((item) => ({
+      updateOne: {
+        filter:
+          direction === "reserve"
+            ? { _id: new Types.ObjectId(item.product!), stock: { $gte: Number(item.quantity) } }
+            : { _id: new Types.ObjectId(item.product!) },
+        update: {
+          $inc: {
+            stock: direction === "reserve" ? -Number(item.quantity) : Number(item.quantity),
+          },
+        },
+      },
+    }))
 
 const enrichOrders = async (orders: any[]) => {
   const productIds = Array.from(
@@ -137,14 +157,7 @@ export const createOrder = async (req: Request, res: Response) => {
     const shipping = subtotal > 1000 ? 0 : 99
     const total = subtotal + shipping
 
-    const stockUpdate = await Product.bulkWrite(
-      orderItems.map((item) => ({
-        updateOne: {
-          filter: { _id: new Types.ObjectId(item.product), stock: { $gte: item.quantity } },
-          update: { $inc: { stock: -item.quantity } },
-        },
-      }))
-    )
+    const stockUpdate = await Product.bulkWrite(getStockUpdates(orderItems, "reserve"))
 
     if (stockUpdate.modifiedCount !== orderItems.length) {
       return res.status(400).json({ message: "One or more products just went out of stock" })
@@ -236,41 +249,61 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid payment status" })
     }
 
-    const update: any = {}
+    const order = await Order.findById(req.params.id)
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" })
+    }
+
+    if (status === "returned" && order.status !== "returned" && !order.returnedStockRestored) {
+      const stockUpdates = getStockUpdates(order.items, "restore")
+
+      if (stockUpdates.length > 0) {
+        await Product.bulkWrite(stockUpdates)
+      }
+
+      order.returnedStockRestored = true
+      order.returnedStockRestoredAt = new Date()
+    }
+
+    if (order.status === "returned" && status && status !== "returned" && order.returnedStockRestored) {
+      const stockUpdates = getStockUpdates(order.items, "reserve")
+      const stockUpdate = stockUpdates.length > 0 ? await Product.bulkWrite(stockUpdates) : null
+
+      if (stockUpdate && stockUpdate.modifiedCount !== stockUpdates.length) {
+        return res.status(400).json({ message: "Not enough stock to move returned order back" })
+      }
+
+      order.returnedStockRestored = false
+      order.returnedStockRestoredAt = undefined
+    }
 
     if (status) {
-      update.status = status
-      update.$push = {
-        statusHistory: {
-          status,
-          note: note?.trim() || undefined,
-          updatedAt: new Date(),
-        },
-      }
+      order.status = status
+      order.statusHistory.push({
+        status,
+        note: note?.trim() || undefined,
+        updatedAt: new Date(),
+      })
     }
 
     if (paymentStatus) {
-      update.paymentStatus = paymentStatus
+      order.paymentStatus = paymentStatus
     }
 
     if (courier || trackingNumber || estimatedDelivery) {
-      update.tracking = {
+      order.tracking = {
+        ...(order.tracking ? JSON.parse(JSON.stringify(order.tracking)) : {}),
         ...(courier ? { courier } : {}),
         ...(trackingNumber ? { trackingNumber } : {}),
         ...(estimatedDelivery ? { estimatedDelivery: new Date(estimatedDelivery) } : {}),
       }
     }
 
-    const order = await Order.findByIdAndUpdate(req.params.id, update, {
-      new: true,
-      runValidators: true,
-    })
+    await order.save()
+    const [enrichedOrder] = await enrichOrders([order.toObject()])
 
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" })
-    }
-
-    res.json(order)
+    res.json(enrichedOrder)
   } catch (error: any) {
     console.error("UPDATE_ORDER_STATUS_ERROR:", error)
     res.status(500).json({
@@ -289,7 +322,7 @@ export const getAdminAnalytics = async (_req: Request, res: Response) => {
           totalOrders: { $sum: 1 },
           revenue: { $sum: "$total" },
           pendingOrders: {
-            $sum: { $cond: [{ $ne: ["$status", "delivered"] }, 1, 0] },
+            $sum: { $cond: [{ $eq: ["$status", "placed"] }, 1, 0] },
           },
           deliveredOrders: {
             $sum: { $cond: [{ $eq: ["$status", "delivered"] }, 1, 0] },
@@ -300,7 +333,7 @@ export const getAdminAnalytics = async (_req: Request, res: Response) => {
 
     const lowStockProducts = await Product.find({
       isActive: { $ne: false },
-      $expr: { $lte: ["$stock", "$lowStockThreshold"] },
+      $expr: { $lt: ["$stock", "$lowStockThreshold"] },
     })
       .sort({ stock: 1 })
       .limit(6)

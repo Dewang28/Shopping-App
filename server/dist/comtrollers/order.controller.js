@@ -8,9 +8,23 @@ const mongoose_1 = require("mongoose");
 const Order_1 = __importDefault(require("../models/Order"));
 const Product_1 = __importDefault(require("../models/Product"));
 const Cart_1 = __importDefault(require("../models/Cart"));
-const ORDER_STATUSES = ["placed", "delivered"];
+const ORDER_STATUSES = ["placed", "delivered", "returned"];
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"];
-const normalizeOrderStatus = (status) => status === "delivered" ? "delivered" : "placed";
+const normalizeOrderStatus = (status) => status === "delivered" || status === "returned" ? status : "placed";
+const getStockUpdates = (items, direction) => items
+    .filter((item) => item.product && mongoose_1.Types.ObjectId.isValid(item.product) && Number(item.quantity) > 0)
+    .map((item) => ({
+    updateOne: {
+        filter: direction === "reserve"
+            ? { _id: new mongoose_1.Types.ObjectId(item.product), stock: { $gte: Number(item.quantity) } }
+            : { _id: new mongoose_1.Types.ObjectId(item.product) },
+        update: {
+            $inc: {
+                stock: direction === "reserve" ? -Number(item.quantity) : Number(item.quantity),
+            },
+        },
+    },
+}));
 const enrichOrders = async (orders) => {
     const productIds = Array.from(new Set(orders.flatMap((order) => (order.items || [])
         .map((item) => item.product || item.productId)
@@ -95,12 +109,7 @@ const createOrder = async (req, res) => {
         const subtotal = orderItems.reduce((sum, item) => sum + item.lineTotal, 0);
         const shipping = subtotal > 1000 ? 0 : 99;
         const total = subtotal + shipping;
-        const stockUpdate = await Product_1.default.bulkWrite(orderItems.map((item) => ({
-            updateOne: {
-                filter: { _id: new mongoose_1.Types.ObjectId(item.product), stock: { $gte: item.quantity } },
-                update: { $inc: { stock: -item.quantity } },
-            },
-        })));
+        const stockUpdate = await Product_1.default.bulkWrite(getStockUpdates(orderItems, "reserve"));
         if (stockUpdate.modifiedCount !== orderItems.length) {
             return res.status(400).json({ message: "One or more products just went out of stock" });
         }
@@ -179,35 +188,49 @@ const updateOrderStatus = async (req, res) => {
         if (paymentStatus && !PAYMENT_STATUSES.includes(paymentStatus)) {
             return res.status(400).json({ message: "Invalid payment status" });
         }
-        const update = {};
+        const order = await Order_1.default.findById(req.params.id);
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+        if (status === "returned" && order.status !== "returned" && !order.returnedStockRestored) {
+            const stockUpdates = getStockUpdates(order.items, "restore");
+            if (stockUpdates.length > 0) {
+                await Product_1.default.bulkWrite(stockUpdates);
+            }
+            order.returnedStockRestored = true;
+            order.returnedStockRestoredAt = new Date();
+        }
+        if (order.status === "returned" && status && status !== "returned" && order.returnedStockRestored) {
+            const stockUpdates = getStockUpdates(order.items, "reserve");
+            const stockUpdate = stockUpdates.length > 0 ? await Product_1.default.bulkWrite(stockUpdates) : null;
+            if (stockUpdate && stockUpdate.modifiedCount !== stockUpdates.length) {
+                return res.status(400).json({ message: "Not enough stock to move returned order back" });
+            }
+            order.returnedStockRestored = false;
+            order.returnedStockRestoredAt = undefined;
+        }
         if (status) {
-            update.status = status;
-            update.$push = {
-                statusHistory: {
-                    status,
-                    note: note?.trim() || undefined,
-                    updatedAt: new Date(),
-                },
-            };
+            order.status = status;
+            order.statusHistory.push({
+                status,
+                note: note?.trim() || undefined,
+                updatedAt: new Date(),
+            });
         }
         if (paymentStatus) {
-            update.paymentStatus = paymentStatus;
+            order.paymentStatus = paymentStatus;
         }
         if (courier || trackingNumber || estimatedDelivery) {
-            update.tracking = {
+            order.tracking = {
+                ...(order.tracking ? JSON.parse(JSON.stringify(order.tracking)) : {}),
                 ...(courier ? { courier } : {}),
                 ...(trackingNumber ? { trackingNumber } : {}),
                 ...(estimatedDelivery ? { estimatedDelivery: new Date(estimatedDelivery) } : {}),
             };
         }
-        const order = await Order_1.default.findByIdAndUpdate(req.params.id, update, {
-            new: true,
-            runValidators: true,
-        });
-        if (!order) {
-            return res.status(404).json({ message: "Order not found" });
-        }
-        res.json(order);
+        await order.save();
+        const [enrichedOrder] = await enrichOrders([order.toObject()]);
+        res.json(enrichedOrder);
     }
     catch (error) {
         console.error("UPDATE_ORDER_STATUS_ERROR:", error);
@@ -227,7 +250,7 @@ const getAdminAnalytics = async (_req, res) => {
                     totalOrders: { $sum: 1 },
                     revenue: { $sum: "$total" },
                     pendingOrders: {
-                        $sum: { $cond: [{ $ne: ["$status", "delivered"] }, 1, 0] },
+                        $sum: { $cond: [{ $eq: ["$status", "placed"] }, 1, 0] },
                     },
                     deliveredOrders: {
                         $sum: { $cond: [{ $eq: ["$status", "delivered"] }, 1, 0] },
@@ -237,7 +260,7 @@ const getAdminAnalytics = async (_req, res) => {
         ]);
         const lowStockProducts = await Product_1.default.find({
             isActive: { $ne: false },
-            $expr: { $lte: ["$stock", "$lowStockThreshold"] },
+            $expr: { $lt: ["$stock", "$lowStockThreshold"] },
         })
             .sort({ stock: 1 })
             .limit(6)

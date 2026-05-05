@@ -151,7 +151,10 @@ const buildAdminAnalyticsFromResources = (
   const analytics = orders.reduce<AdminAnalytics>(
     (result, order) => {
       const total = Number(order.total ?? 0);
-      const status = order.status === "delivered" ? "delivered" : "placed";
+      const status =
+        order.status === "delivered" || order.status === "returned"
+          ? order.status
+          : "placed";
       const createdAt = order.createdAt ? new Date(order.createdAt) : null;
 
       result.totalOrders += 1;
@@ -203,7 +206,7 @@ const buildAdminAnalyticsFromResources = (
     .filter(
       (product) =>
         product.isActive !== false &&
-        Number(product.stock ?? 0) <= Number(product.lowStockThreshold ?? 5)
+        Number(product.stock ?? 0) < Number(product.lowStockThreshold ?? 5)
     )
     .sort((a, b) => Number(a.stock ?? 0) - Number(b.stock ?? 0))
     .slice(0, 6)

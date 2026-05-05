@@ -8,7 +8,7 @@ import { ChevronLeft, PackageCheck, Truck } from "lucide-react";
 import { getAdminOrders, Order, updateOrderStatus } from "../../services/order.services";
 import { useAuthStore } from "../../store/auth.store";
 
-const ORDER_STATUSES = ["placed", "delivered"];
+const ORDER_STATUSES = ["placed", "delivered", "returned"];
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"];
 
 const formatCurrency = (value?: number) =>
@@ -150,7 +150,11 @@ export default function AdminOrdersPage() {
                           Order Status
                         </span>
                         <select
-                          value={order.status === "delivered" ? "delivered" : "placed"}
+                          value={
+                            order.status === "delivered" || order.status === "returned"
+                              ? order.status
+                              : "placed"
+                          }
                           onChange={(event) =>
                             updateOrder(order, {
                               status: event.target.value,
@@ -228,7 +232,13 @@ export default function AdminOrdersPage() {
                       <div className="space-y-2">
                         {(order.statusHistory?.length
                           ? order.statusHistory
-                          : [{ status: order.status === "delivered" ? "delivered" : "placed", updatedAt: order.createdAt }]
+                          : [{
+                              status:
+                                order.status === "delivered" || order.status === "returned"
+                                  ? order.status
+                                  : "placed",
+                              updatedAt: order.createdAt
+                            }]
                         ).map((event, index) => (
                           <div key={`${event.status}-${index}`} className="flex justify-between text-sm">
                             <span className="font-semibold capitalize text-gray-700">{event.status}</span>

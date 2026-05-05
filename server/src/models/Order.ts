@@ -24,6 +24,8 @@ export interface IOrder extends Document {
   paymentMethod: string
   paymentStatus: string
   status: string
+  returnedStockRestored: boolean
+  returnedStockRestoredAt?: Date
   tracking?: {
     courier?: string
     trackingNumber?: string
@@ -62,7 +64,9 @@ const orderSchema = new Schema<IOrder>(
     total: { type: Number, required: true },
     paymentMethod: { type: String, default: "cod" },
     paymentStatus: { type: String, default: "pending" },
-    status: { type: String, enum: ["placed", "delivered"], default: "placed" },
+    status: { type: String, enum: ["placed", "delivered", "returned"], default: "placed" },
+    returnedStockRestored: { type: Boolean, default: false },
+    returnedStockRestoredAt: { type: Date },
     tracking: {
       courier: { type: String },
       trackingNumber: { type: String },
@@ -70,7 +74,7 @@ const orderSchema = new Schema<IOrder>(
     },
     statusHistory: [
       {
-        status: { type: String, enum: ["placed", "delivered"], required: true },
+        status: { type: String, enum: ["placed", "delivered", "returned"], required: true },
         note: { type: String },
         updatedAt: { type: Date, default: Date.now },
       },
