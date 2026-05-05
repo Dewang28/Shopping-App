@@ -149,7 +149,7 @@ export default function OrdersPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold uppercase tracking-wide">
-                      {order.status || "pending"}
+                      {order.status === "delivered" ? "delivered" : "placed"}
                     </span>
                     <span className="text-lg font-bold text-gray-900">
                       {formatCurrency(getOrderTotal(order))}

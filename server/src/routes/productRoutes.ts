@@ -1,5 +1,11 @@
 import { Router } from "express";
-import { createProduct, getProducts , getProductById } from "../comtrollers/productController";
+import {
+  createProduct,
+  deleteProduct,
+  getProducts,
+  getProductById,
+  updateProduct,
+} from "../comtrollers/productController";
 import { upload } from "../utils/upload";
 import { auth, admin } from "../middleware/auth.middleware";
 
@@ -15,6 +21,8 @@ router.post(
 
 router.get("/", getProducts);
 router.get("/:id", getProductById);
+router.put("/:id", upload.array("images"), auth, admin, updateProduct);
+router.delete("/:id", auth, admin, deleteProduct);
 
 
 export default router;

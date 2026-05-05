@@ -6,4 +6,7 @@ const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
 router.post("/", auth_middleware_1.auth, order_controller_1.createOrder);
 router.get("/me", auth_middleware_1.auth, order_controller_1.getMyOrders);
+router.get("/admin/analytics", auth_middleware_1.auth, auth_middleware_1.admin, order_controller_1.getAdminAnalytics);
+router.get("/admin", auth_middleware_1.auth, auth_middleware_1.admin, order_controller_1.getAllOrders);
+router.patch("/:id/status", auth_middleware_1.auth, auth_middleware_1.admin, order_controller_1.updateOrderStatus);
 exports.default = router;

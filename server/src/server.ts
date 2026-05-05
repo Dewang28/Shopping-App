@@ -4,6 +4,11 @@ import { connectDB } from "./config/db";
 import productRoutes from "./routes/productRoutes";
 import authRoutes from "./routes/auth.routes";
 import orderRoutes from "./routes/order.routes";
+import {
+  getAdminAnalytics,
+  getAllOrders,
+} from "./comtrollers/order.controller";
+import { admin, auth } from "./middleware/auth.middleware";
 import cookieParser from "cookie-parser";
 import wishlistRoutes from "./routes/wishlist.routes";
 import cartRoutes from "./routes/cart.routes";
@@ -45,6 +50,8 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
+app.get("/api/admin/orders", auth, admin, getAllOrders);
+app.get("/api/admin/orders/analytics", auth, admin, getAdminAnalytics);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
 

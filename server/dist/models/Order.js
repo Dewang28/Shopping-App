@@ -25,6 +25,21 @@ const orderSchema = new mongoose_1.Schema({
     shipping: { type: Number, required: true },
     total: { type: Number, required: true },
     paymentMethod: { type: String, default: "cod" },
-    status: { type: String, default: "pending" }
+    paymentStatus: { type: String, default: "pending" },
+    status: { type: String, enum: ["placed", "delivered"], default: "placed" },
+    tracking: {
+        courier: { type: String },
+        trackingNumber: { type: String },
+        estimatedDelivery: { type: Date },
+    },
+    statusHistory: [
+        {
+            status: { type: String, enum: ["placed", "delivered"], required: true },
+            note: { type: String },
+            updatedAt: { type: Date, default: Date.now },
+        },
+    ],
 }, { timestamps: true });
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
 exports.default = (0, mongoose_1.model)("Order", orderSchema);

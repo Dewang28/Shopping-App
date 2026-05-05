@@ -8,4 +8,6 @@ const router = (0, express_1.Router)();
 router.post("/", upload_1.upload.array("images"), auth_middleware_1.auth, auth_middleware_1.admin, productController_1.createProduct);
 router.get("/", productController_1.getProducts);
 router.get("/:id", productController_1.getProductById);
+router.put("/:id", upload_1.upload.array("images"), auth_middleware_1.auth, auth_middleware_1.admin, productController_1.updateProduct);
+router.delete("/:id", auth_middleware_1.auth, auth_middleware_1.admin, productController_1.deleteProduct);
 exports.default = router;

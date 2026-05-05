@@ -9,6 +9,11 @@ export type Product = {
   images: string[];
   category?: string[];
   gender?: string;
+  sku?: string;
+  stock?: number;
+  lowStockThreshold?: number;
+  isActive?: boolean;
+  createdAt?: string;
 }
 
 export type CreateProductPayload = {
@@ -21,4 +26,8 @@ export type CreateProductPayload = {
   images: File[];
   category?: string[];
   gender?: string;
+  sku?: string;
+  stock?: number;
+  lowStockThreshold?: number;
+  isActive?: boolean;
 }

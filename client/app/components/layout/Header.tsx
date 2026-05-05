@@ -76,7 +76,7 @@ export default function Header() {
           {/* Admin Link */}
           {user?.role === "admin" && (
             <Link
-              href="/admin/products/create"
+              href="/admin"
               className="hidden sm:flex flex-col items-center gap-1 group text-gray-600 hover:text-black"
             >
               <LayoutDashboard className="h-5 w-5 transition-transform group-hover:scale-110" />

@@ -1,5 +1,5 @@
 import { Product } from "../types/product";
-import axios from "axios";
+import api from "./api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -44,8 +44,16 @@ export const getProductById = async (id: string): Promise<Product> => {
 };
 
 export const createProduct = async (productData: Partial<Product> | FormData) => {
-  const response = await axios.post(`${API_URL}/api/products`, productData, {
-    withCredentials: true,
-  });
+  const response = await api.post("/api/products", productData);
+  return response.data;
+};
+
+export const updateProduct = async (id: string, productData: Partial<Product> | FormData) => {
+  const response = await api.put(`/api/products/${id}`, productData);
+  return response.data as Product;
+};
+
+export const deleteProduct = async (id: string) => {
+  const response = await api.delete(`/api/products/${id}`);
   return response.data;
 };
