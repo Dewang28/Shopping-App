@@ -25,7 +25,7 @@ const enrichOrders = async (orders: any[]) => {
       orders.flatMap((order: any) =>
         (order.items || [])
           .map((item: LegacyOrderItem) => item.product || item.productId)
-          .filter(Boolean)
+          .filter((productId: string) => productId && Types.ObjectId.isValid(productId))
       )
     )
   ) as string[]
@@ -209,6 +209,7 @@ export const getAllOrders = async (_req: Request, res: Response) => {
     const orders = await Order.find().sort({ createdAt: -1 }).lean()
     res.json(await enrichOrders(orders))
   } catch (error: any) {
+    console.error("GET_ADMIN_ORDERS_ERROR:", error)
     res.status(500).json({
       message: "Failed to fetch orders",
       error: error.message,
@@ -271,6 +272,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     res.json(order)
   } catch (error: any) {
+    console.error("UPDATE_ORDER_STATUS_ERROR:", error)
     res.status(500).json({
       message: "Failed to update order",
       error: error.message,
@@ -390,6 +392,7 @@ export const getAdminAnalytics = async (_req: Request, res: Response) => {
       })),
     })
   } catch (error: any) {
+    console.error("GET_ADMIN_ANALYTICS_ERROR:", error)
     res.status(500).json({
       message: "Failed to fetch analytics",
       error: error.message,

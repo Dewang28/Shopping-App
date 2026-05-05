@@ -14,7 +14,7 @@ const normalizeOrderStatus = (status) => status === "delivered" ? "delivered" : 
 const enrichOrders = async (orders) => {
     const productIds = Array.from(new Set(orders.flatMap((order) => (order.items || [])
         .map((item) => item.product || item.productId)
-        .filter(Boolean))));
+        .filter((productId) => productId && mongoose_1.Types.ObjectId.isValid(productId)))));
     const products = await Product_1.default.find({ _id: { $in: productIds } }, { title: 1, price: 1, images: 1 }).lean();
     const productMap = new Map(products.map((product) => [String(product._id), product]));
     return orders.map((order) => {
@@ -162,6 +162,7 @@ const getAllOrders = async (_req, res) => {
         res.json(await enrichOrders(orders));
     }
     catch (error) {
+        console.error("GET_ADMIN_ORDERS_ERROR:", error);
         res.status(500).json({
             message: "Failed to fetch orders",
             error: error.message,
@@ -209,6 +210,7 @@ const updateOrderStatus = async (req, res) => {
         res.json(order);
     }
     catch (error) {
+        console.error("UPDATE_ORDER_STATUS_ERROR:", error);
         res.status(500).json({
             message: "Failed to update order",
             error: error.message,
@@ -322,6 +324,7 @@ const getAdminAnalytics = async (_req, res) => {
         });
     }
     catch (error) {
+        console.error("GET_ADMIN_ANALYTICS_ERROR:", error);
         res.status(500).json({
             message: "Failed to fetch analytics",
             error: error.message,

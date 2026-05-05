@@ -35,49 +35,67 @@ const register = async (req, res) => {
 };
 exports.register = register;
 const login = async (req, res) => {
-    const { email, password } = req.body;
-    const user = await User_1.default.findOne({ email });
-    if (!user) {
-        return res.status(401).json({ message: "USER_NOT_FOUND" });
+    try {
+        const { email, password } = req.body;
+        const user = await User_1.default.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ message: "USER_NOT_FOUND" });
+        }
+        const match = await bcryptjs_1.default.compare(password, user.password);
+        if (!match) {
+            return res.status(401).json({ message: "PASSWORD_MISMATCH" });
+        }
+        const token = jsonwebtoken_1.default.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+        res.cookie("token", token, {
+            httpOnly: true,
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+        res.json({
+            token,
+            user: {
+                _id: user._id,
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            },
+        });
     }
-    const match = await bcryptjs_1.default.compare(password, user.password);
-    if (!match) {
-        return res.status(401).json({ message: "PASSWORD_MISMATCH" });
+    catch (err) {
+        console.error("LOGIN ERROR:", err);
+        res.status(500).json({
+            message: "Login failed",
+            error: err.message,
+        });
     }
-    const token = jsonwebtoken_1.default.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    res.json({
-        token,
-        user: {
-            _id: user._id,
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-        },
-    });
 };
 exports.login = login;
 const me = async (req, res) => {
-    const authReq = req;
-    const user = await User_1.default.findById(authReq.user?.id);
-    if (!user) {
-        return res.status(404).json({ message: "USER_NOT_FOUND" });
+    try {
+        const authReq = req;
+        const user = await User_1.default.findById(authReq.user?.id);
+        if (!user) {
+            return res.status(404).json({ message: "USER_NOT_FOUND" });
+        }
+        res.json({
+            user: {
+                _id: user._id,
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            },
+        });
     }
-    res.json({
-        user: {
-            _id: user._id,
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-        },
-    });
+    catch (err) {
+        console.error("ME ERROR:", err);
+        res.status(500).json({
+            message: "Failed to fetch profile",
+            error: err.message,
+        });
+    }
 };
 exports.me = me;
 const logout = (req, res) => {
