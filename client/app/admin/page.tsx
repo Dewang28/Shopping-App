@@ -256,7 +256,12 @@ export default function AdminPage() {
                     analytics.lowStockProducts.map((product) => (
                       <div key={product._id} className="flex items-center justify-between rounded-lg bg-amber-50 px-4 py-3">
                         <div>
-                          <p className="font-bold text-slate-950">{product.title}</p>
+                          <Link
+                            href={`/shop/product/${product._id}`}
+                            className="font-bold text-slate-950 transition hover:underline"
+                          >
+                            {product.title}
+                          </Link>
                           <p className="text-xs text-slate-500">{product.brand}</p>
                         </div>
                         <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-amber-700">
@@ -284,7 +289,12 @@ export default function AdminPage() {
                           {index + 1}
                         </span>
                         <div className="min-w-0">
-                          <p className="truncate font-bold text-slate-950">{product.title}</p>
+                          <Link
+                            href={`/shop/product/${product._id}`}
+                            className="truncate font-bold text-slate-950 transition hover:underline"
+                          >
+                            {product.title}
+                          </Link>
                           <p className="text-xs text-slate-500">{product.quantitySold} units sold</p>
                         </div>
                         <span className="text-sm font-black text-slate-950">

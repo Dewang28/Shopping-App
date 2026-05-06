@@ -132,16 +132,24 @@ export default function AdminProductsPage() {
                   className="grid gap-4 border-b border-gray-100 px-5 py-4 last:border-0 md:grid-cols-[1.5fr_0.7fr_0.7fr_0.7fr_0.8fr] md:items-center"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
+                    <Link
+                      href={`/shop/product/${product._id}`}
+                      className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50 transition hover:border-gray-300"
+                    >
                       <Image
                         src={product.images?.[0] || "/placeholder.png"}
                         alt={product.title}
                         fill
                         className="object-contain p-1"
                       />
-                    </div>
+                    </Link>
                     <div className="min-w-0">
-                      <p className="truncate font-bold text-gray-950">{product.title}</p>
+                      <Link
+                        href={`/shop/product/${product._id}`}
+                        className="truncate font-bold text-gray-950 transition hover:underline"
+                      >
+                        {product.title}
+                      </Link>
                       <p className="text-sm text-gray-500">{product.brand}</p>
                       <p className="text-xs text-gray-400">{product.sku || "No SKU"}</p>
                     </div>
