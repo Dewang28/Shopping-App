@@ -4,9 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
-// Filter configuration
 const FILTERS = {
-  categories: [
+  productTypes: [
     { label: "T-Shirts", value: "t-shirts" },
     { label: "Shirts", value: "shirts" },
     { label: "Jeans", value: "jeans" },
@@ -14,32 +13,24 @@ const FILTERS = {
     { label: "Dresses", value: "dresses" },
     { label: "Activewear", value: "activewear" },
   ],
-  gender: [
-    { label: "Men", value: "men" },
-    { label: "Women", value: "women" },
-    { label: "Unisex", value: "unisex" },
-  ]
 };
 
 export default function FilterSidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({
+  const [selectedFilters, setSelectedFilters] = useState<{
+    category: string[];
+  }>({
     category: [],
-    brand: [],
-    gender: [],
   });
 
-  
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
     setSelectedFilters({
       category: params.getAll("category"),
-      brand: params.getAll("brand"),
-      gender: params.getAll("gender"),
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.toString()]); 
+  }, [searchParams.toString()]);
 
   const handleFilterChange = (type: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -81,39 +72,12 @@ export default function FilterSidebar() {
 
       {/* Filter Sections */}
       <div className="space-y-8">
-        
-        {/* Gender Section */}
         <div>
           <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
-            Gender
+            Product Type
           </h4>
           <div className="space-y-3">
-            {FILTERS.gender.map((item) => (
-              <label
-                key={item.value}
-                className="flex items-center gap-3 cursor-pointer group"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedFilters.gender.includes(item.value)}
-                  onChange={() => handleFilterChange("gender", item.value)}
-                  className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer"
-                />
-                <span className="text-sm text-gray-600 group-hover:text-black transition-colors select-none">
-                  {item.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Categories Section */}
-        <div>
-          <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
-            Categories
-          </h4>
-          <div className="space-y-3">
-            {FILTERS.categories.map((item) => (
+            {FILTERS.productTypes.map((item) => (
               <label
                 key={item.value}
                 className="flex items-center gap-3 cursor-pointer group"

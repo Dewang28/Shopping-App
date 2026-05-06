@@ -214,7 +214,12 @@ export default function AdminOrdersPage() {
                               {order.items.map((item, index) => (
                                 <div key={`${order._id}-${index}`} className="flex justify-between rounded-lg bg-gray-50 px-4 py-3 text-sm">
                                   <div>
-                                    <p className="font-semibold text-gray-900">{item.title || "Product"}</p>
+                                    <Link
+                                      href={`/shop/product/${item.product}`}
+                                      className="font-semibold text-gray-900 transition hover:text-black hover:underline"
+                                    >
+                                      {item.title || "Product"}
+                                    </Link>
                                     <p className="text-gray-500">Qty {item.quantity}</p>
                                   </div>
                                   <span className="font-bold text-gray-900">

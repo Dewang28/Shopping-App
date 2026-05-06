@@ -165,18 +165,24 @@ export default function OrdersPage() {
                     <div className="space-y-4">
                       {order.items.map((item, index) => (
                         <div key={`${order._id}-${item.product}-${index}`} className="flex gap-4">
-                          <div className="relative h-20 w-20 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 shrink-0">
+                          <Link
+                            href={`/shop/product/${item.product}`}
+                            className="relative h-20 w-20 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 shrink-0 transition hover:border-gray-300"
+                          >
                             <Image
                               src={item.image || "/placeholder.png"}
                               alt={item.title || "Ordered product"}
                               fill
                               className="object-contain p-2 mix-blend-multiply"
                             />
-                          </div>
+                          </Link>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900 line-clamp-2">
+                            <Link
+                              href={`/shop/product/${item.product}`}
+                              className="font-semibold text-gray-900 line-clamp-2 transition hover:text-black hover:underline"
+                            >
                               {item.title || "Product"}
-                            </p>
+                            </Link>
                             <p className="text-sm text-gray-500 mt-1">
                               Qty: {item.quantity} x {formatCurrency(item.price)}
                             </p>

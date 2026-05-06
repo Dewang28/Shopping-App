@@ -49,7 +49,10 @@ export default function CartPage() {
                 className="group flex gap-4 sm:gap-6 bg-white p-4 sm:p-5 rounded-2xl border border-gray-100 shadow-sm hover:border-gray-200 transition-all"
               >
                 {/* Product Image */}
-                <div className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                <Link
+                  href={`/shop/product/${item._id}`}
+                  className="relative w-24 h-24 sm:w-32 sm:h-32 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 transition group-hover:border-gray-200"
+                >
                   <Image
               
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,15 +61,18 @@ export default function CartPage() {
                     fill
                     className="object-contain p-2 mix-blend-multiply"
                   />
-                </div>
+                </Link>
 
                 {/* Details */}
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start gap-2">
-                      <h3 className="font-semibold text-gray-900 line-clamp-2 leading-snug">
+                      <Link
+                        href={`/shop/product/${item._id}`}
+                        className="font-semibold text-gray-900 line-clamp-2 leading-snug transition hover:text-black hover:underline"
+                      >
                         {item.title}
-                      </h3>
+                      </Link>
                       <button
                         onClick={() => removeItem(item._id)}
                         className="text-gray-400 hover:text-red-500 transition-colors p-1 -mr-2"
